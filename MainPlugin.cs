@@ -16,7 +16,7 @@ namespace ClickToDestroy
 
     {
         internal const string ModName = "ClickToDestroy";
-        internal const string ModVersion = "1.0.0";
+        internal const string ModVersion = "1.0.1";
         internal const string Author = "Azumatt";
         private const string ModGUID = Author + "." + ModName;
         private static string ConfigFileName = ModGUID + ".cfg";
@@ -65,16 +65,18 @@ namespace ClickToDestroy
         }
     }
 
-    [HarmonyPatch(typeof(UIInventory), nameof(UIInventory.RightClickOnBackpackSlot))]
+    [HarmonyPatch(typeof(UISlotInventoryStorage), nameof(UISlotInventoryStorage.OnPointerRightClick))]
     static class UIInventoryRightClickOnBackpackSlotPatch
     {
-        static bool Prefix(UIInventory __instance, PointerEventData eventData, Item itemInSlot)
+        static bool Prefix(UISlotInventoryStorage __instance, PointerEventData eventData)
         {
             if (!Input.GetKey(KeyCode.LeftControl)) return true;
-            if (!itemInSlot)
+
+            if (__instance.Item == null)
                 return true;
-            itemInSlot.StorageBelongTo.RemoveItem(itemInSlot);
-            __instance.Refresh();
+            ClickToDestroyPlugin.ClickToDestroyLogger.LogInfo($"Destroying item");
+            __instance.Item.StorageBelongTo.RemoveItem(__instance.Item);
+            Global.code.uiInventory.Refresh();
             return false;
         }
     }
